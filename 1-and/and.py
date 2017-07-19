@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+"""Chainer Example."""
+
 import numpy as np
 import chainer
 import chainer.functions as F
@@ -9,18 +11,21 @@ from chainer.training import extensions
 
 
 class LogicCircuit(chainer.Chain):
+    """ニューラルネットワークの構造"""
+
     def __init__(self):
-        w = I.Normal(scale=1.0)  # モデルパラメータの初期化（平均0，分散1の分布に従う）
-        super(LogicCircuit, self).__init__(
-            l1=L.Linear(None, 2, initialW=w, initial_bias=0.5),
-        )
+        iniw = I.Normal(scale=1.0)  # モデルパラメータの初期化（平均0，分散1の分布に従う）
+        super(LogicCircuit, self).__init__()
+        with self.init_scope():
+            self.lin1 = L.Linear(None, 2, initialW=iniw, initial_bias=0.5)
 
     def __call__(self, x):
-        y = self.l1(x)
+        y = self.lin1(x)
         return y
 
 
 def main():
+    """main"""
 
     epoch = 20
     batchsize = 4
@@ -72,7 +77,8 @@ def main():
     chainer.serializers.save_npz("result/AND.model", model)
 
     # 学習結果の評価
-    for i in range(len(trainx)):
+    for i in range(trainx.shape[0]):
+    # for i in range(len(trainx)):
         x = chainer.Variable(trainx[i].reshape(1, 2))
         result = F.softmax(model.predictor(x))
         print("input: {}, result: {}".format(trainx[i], result.data.argmax()))
