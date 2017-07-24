@@ -6,3 +6,6 @@
    - 2-exor
      - 中間層あり
      - Jupyterでのモデルデータを読み込んでのテスト
+   - 3-mnist
+     - DNN
+     - CNN

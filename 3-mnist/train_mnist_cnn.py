@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""MNIST DNN Example."""
+"""MNIST CNN Example."""
 
 from __future__ import print_function
 import argparse
@@ -19,19 +19,21 @@ class MLP(chainer.Chain):
         w = I.Normal(scale=0.05)  # モデルパラメータの初期化
         super(MLP, self).__init__()
         with self.init_scope():
-            # "None"にしておくと入力に応じて自動的にノード数を定義する
-            self.l1=L.Linear(None, n_units, initialW=w)
-            self.l2=L.Linear(None, n_units, initialW=w)
-            self.l3=L.Linear(None, n_out, initialW=w)
+            self.conv1=L.Convolution2D(1, 16, 5, 1, 0)      # 1層目の畳み込み層（フィルタ数は16）
+            self.conv2=L.Convolution2D(16, 32, 5, 1, 0)     # 2層目の畳み込み層（フィルタ数は32）
+            self.l3=L.Linear(None, n_out, initialW=w)       # クラス分類用
 
     def __call__(self, x):
-        h1 = F.relu(self.l1(x))  # 活性化関数はReLUを利用
-        h2 = F.relu(self.l2(h1))
+        # 最大値プーリングは2×2，活性化関数はReLU
+        h1 = F.max_pooling_2d(F.relu(self.conv1(x)), ksize=2, stride=2)
+        h2 = F.max_pooling_2d(F.relu(self.conv2(h1)), ksize=2, stride=2)
         y = self.l3(h2)
         return y
 
 
 def main():
+    """main"""
+
     parser = argparse.ArgumentParser(description='Chainer example: MNIST')
     parser.add_argument('--batchsize', '-b', type=int,
                         default=100, help='Number of images in each mini-batch')
@@ -53,7 +55,7 @@ def main():
     print('# epoch: {}'.format(args.epoch))
     print('')
 
-    train, test = chainer.datasets.get_mnist()
+    train, test = chainer.datasets.get_mnist(ndim=3)  # ndim=3を引数で与えるだけでOK
     model = L.Classifier(MLP(args.unit, 10), lossfun=F.softmax_cross_entropy)
     if args.gpu >= 0:
         chainer.cuda.get_device(args.gpu).use()
